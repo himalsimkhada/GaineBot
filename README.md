@@ -1,0 +1,2 @@
+# GaineBot
+Discord Music bot
