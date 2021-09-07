@@ -12,7 +12,8 @@ from youtube_dl.utils import DownloadError, ExtractorError
 import validators
 
 load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
+# TOKEN = os.getenv('DISCORD_TOKEN')
+TOKEN = os.environ('DISCORD_TOKEN')
 
 bot_name = 'Gaine'
 
