@@ -59,10 +59,11 @@ async def on_voice_state_update(member, before, after):
                 break  # if it's playing it breaks
             else:
                 await voice.disconnect()  # if not it disconnects
+                channel = bot.get_channel(505615259638300687)
+                await channel.send(f'Disconnected due to inactivity **(Inactive Time = 5 minutes)**')
     except AttributeError:
         print(f'Disconnected due to inactivity')
-        channel = bot.get_channel(505615259638300687)
-        await channel.send(f'Disconnected due to inactivity **(Inactive Time = 5 minutes)**')
+        
 
 
 def player(ctx, voice):
