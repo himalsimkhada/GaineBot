@@ -44,10 +44,10 @@ async def on_ready():
     bot_check.start()
     print(f'{bot.user} has connected to Discord!')
 
-@commands.Cog.listener()
-async def on_voice_state_update(self, member, before, after):
+@bot.event
+async def on_voice_state_update(member, before, after):
 
-    if not member.id == self.bot.user.id:
+    if not member.id == bot.user.id:
         return
 
     elif before.channel is None:
