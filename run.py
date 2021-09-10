@@ -54,7 +54,7 @@ async def on_voice_state_update(member, before, after):
         while voice.is_playing():  # Checks if voice is playing
             await asyncio.sleep(1)  # While it's playing it sleeps for 1 second
         else:
-            await asyncio.sleep(60)  # If it's not playing it waits 15 seconds
+            await asyncio.sleep(300)  # If it's not playing it waits 300 seconds / 5 minutes
             while voice.is_playing():  # and checks once again if the bot is not playing
                 break  # if it's playing it breaks
             else:
@@ -62,7 +62,7 @@ async def on_voice_state_update(member, before, after):
     except AttributeError:
         print(f'Disconnected due to inactivity')
         channel = bot.get_channel(505615259638300687)
-        await channel.send(f'Disconnected due to inactivity')
+        await channel.send(f'Disconnected due to inactivity **(Inactive Time = 5 minutes)**')
 
 
 def player(ctx, voice):
