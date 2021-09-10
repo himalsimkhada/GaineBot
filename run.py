@@ -10,6 +10,7 @@ from discord.player import FFmpegPCMAudio, PCMVolumeTransformer
 from youtube_dl import YoutubeDL
 from youtube_dl.utils import DownloadError, ExtractorError
 import validators
+import asyncio
 
 load_dotenv()
 # TOKEN = os.getenv('DISCORD_TOKEN')
@@ -42,6 +43,25 @@ async def bot_check():
 async def on_ready():
     bot_check.start()
     print(f'{bot.user} has connected to Discord!')
+
+@bot.event()
+async def on_voice_state_update(self, member, before, after):
+    
+    if not member.id == self.bot.user.id:
+        return
+
+    elif before.channel is None:
+        voice = after.channel.guild.voice_client
+        time = 0
+        while True:
+            await asyncio.sleep(1)
+            time = time + 1
+            if voice.is_playing() and not voice.is_paused():
+                time = 0
+            if time == 10:
+                await voice.disconnect()
+            if not voice.is_connected():
+                break
 
 def player(ctx, voice):
     global music_title
@@ -178,7 +198,7 @@ async def queue_display(ctx):
             queue_list = f'```\n{i}. {title}\n```'
             await ctx.send(queue_list)
 
-@bot.command(name='skip', help='Skips currently playing song')
+@bot.command(name='skip', aliases=['next'] help='Skips currently playing song')
 async def skip(ctx):
     global music_title
     global music_url
