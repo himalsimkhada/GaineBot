@@ -44,9 +44,8 @@ async def on_ready():
     bot_check.start()
     print(f'{bot.user} has connected to Discord!')
 
-@bot.event()
+@bot.event
 async def on_voice_state_update(self, member, before, after):
-    
     if not member.id == self.bot.user.id:
         return
 
