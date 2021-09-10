@@ -32,6 +32,7 @@ YDL_OPTIONS = {'format': 'bestaudio', 'noplaylist': 'True'}
 FFMPEG_OPTIONS = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
 
+
 @tasks.loop(seconds=1)
 async def bot_check():
     if queue:
@@ -39,29 +40,30 @@ async def bot_check():
     if not queue:
         await bot.change_presence(activity=discord.Game(name='NOTHING'), status=discord.Status.idle)
 
+
 @bot.event
 async def on_ready():
     bot_check.start()
     print(f'{bot.user} has connected to Discord!')
 
+
 @bot.event
 async def on_voice_state_update(member, before, after):
-
-    if not member.id == bot.user.id:
-        return
-
-    elif before.channel is None:
+    try:
         voice = after.channel.guild.voice_client
-        time = 0
-        while True:
-            await asyncio.sleep(1)
-            time = time + 1
-            if voice.is_playing() and not voice.is_paused():
-                time = 0
-            if time == 10:
-                await voice.disconnect()
-            if not voice.is_connected():
-                break
+        while voice.is_playing():  # Checks if voice is playing
+            await asyncio.sleep(1)  # While it's playing it sleeps for 1 second
+        else:
+            await asyncio.sleep(60)  # If it's not playing it waits 15 seconds
+            while voice.is_playing():  # and checks once again if the bot is not playing
+                break  # if it's playing it breaks
+            else:
+                await voice.disconnect()  # if not it disconnects
+    except AttributeError:
+        print(f'Disconnected due to inactivity')
+        channel = bot.get_channel(505615259638300687)
+        await channel.send(f'Disconnected due to inactivity')
+
 
 def player(ctx, voice):
     global music_title
@@ -80,6 +82,7 @@ def player(ctx, voice):
         URL, executable="ffmpeg", **FFMPEG_OPTIONS), after=lambda e: play_queue(ctx, voice))
     voice.is_playing()
 
+
 def play_queue(ctx, voice):
     global repeat
     try:
@@ -90,6 +93,7 @@ def play_queue(ctx, voice):
             player(ctx, voice)
     except IndexError:
         print(f'Queue finish')
+
 
 @bot.command(name='join', aliases=['summon'], help='Joins the voice channel')
 async def summon(ctx):
@@ -112,9 +116,9 @@ async def play(ctx, *, url: str):
     channel = ctx.message.author.voice.channel
     voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     if voice is None:
-            await channel.connect()
-            await ctx.guild.change_voice_state(channel=channel, self_mute=False, self_deaf=True)
-            voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
+        await channel.connect()
+        await ctx.guild.change_voice_state(channel=channel, self_mute=False, self_deaf=True)
+        voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
 
     y_link = 'https://www.youtube.com/results?search_query='
     query_string = urllib.parse.urlencode({'search_query': url})
@@ -134,7 +138,8 @@ async def play(ctx, *, url: str):
                     await ctx.send(embed=discord.Embed(description=('Searching for '+url), title=bot_name))
                     player(ctx, voice)
                     await ctx.message.add_reaction('▶')
-                    embed=discord.Embed(title=music_title, url=music_url, description='Now playing')
+                    embed = discord.Embed(
+                        title=music_title, url=music_url, description='Now playing')
                     embed.set_footer(text=f'Requested by {ctx.message.author}')
                     embed.set_thumbnail(url=music_thumbnail)
                     await ctx.send(embed=embed)
@@ -148,7 +153,8 @@ async def play(ctx, *, url: str):
                 await ctx.send(embed=discord.Embed(description=('Searching for '+'['+url+']('+link+')'), title=bot_name))
                 player(ctx, voice)
                 await ctx.message.add_reaction('▶')
-                embed=discord.Embed(title=music_title, url=music_url, description='Now playing')
+                embed = discord.Embed(
+                    title=music_title, url=music_url, description='Now playing')
                 embed.set_footer(text=f'Requested by {ctx.message.author}')
                 embed.set_thumbnail(url=music_thumbnail)
                 await ctx.send(embed=embed)
@@ -164,6 +170,13 @@ async def play(ctx, *, url: str):
     except AttributeError:
         await ctx.send('Joined a voice channel, please use the command again to play')
 
+
+@play.error
+async def play_error(ctx, error):
+    if isinstance(error, discord.ext.commands.errors.MissingRequiredArgument):
+        await ctx.send("Please include URL after !play command to play song.")
+
+
 @bot.command(name='nowplaying', aliases=['np', 'currently'], help='Displays currently playing song')
 async def now(ctx):
     global music_title
@@ -172,7 +185,8 @@ async def now(ctx):
     voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     if voice:
         if voice.is_playing():
-            embed=discord.Embed(title=music_title, url=music_url, description='Now playing')
+            embed = discord.Embed(
+                title=music_title, url=music_url, description='Now playing')
             embed.set_footer(text=f'Requested by {ctx.message.author}')
             embed.set_thumbnail(url=music_thumbnail)
             embed.set_image(url=music_thumbnail)
@@ -192,11 +206,12 @@ async def queue_display(ctx):
         i = 0
         for x in queue:
             with YoutubeDL(YDL_OPTIONS) as ydl:
-                info=ydl.extract_info(x, download=False)
+                info = ydl.extract_info(x, download=False)
             i = i + 1
             title = str(info.get('title'))
             queue_list = f'```\n{i}. {title}\n```'
             await ctx.send(queue_list)
+
 
 @bot.command(name='skip', aliases=['next'], help='Skips currently playing song')
 async def skip(ctx):
@@ -211,7 +226,8 @@ async def skip(ctx):
                 voice.pause()
                 del queue[0]
                 play_queue(ctx, voice)
-                embed=discord.Embed(title=music_title, url=music_url, description='Now playing')
+                embed = discord.Embed(
+                    title=music_title, url=music_url, description='Now playing')
                 embed.set_footer(text=f'Requested by {ctx.message.author}')
                 embed.set_thumbnail(url=music_thumbnail)
                 await ctx.send(embed=embed)
@@ -220,7 +236,8 @@ async def skip(ctx):
                 voice.pause()
                 # del queue[0]
                 play_queue(ctx, voice)
-                embed=discord.Embed(title=music_title, url=music_url, description='Now playing')
+                embed = discord.Embed(
+                    title=music_title, url=music_url, description='Now playing')
                 embed.set_footer(text=f'Requested by {ctx.message.author}')
                 embed.set_thumbnail(url=music_thumbnail)
                 await ctx.send(embed=embed)
@@ -228,6 +245,7 @@ async def skip(ctx):
             await ctx.send('No song in queue.')
     else:
         await ctx.send('No music playing')
+
 
 @bot.command(name='loop', aliases=['repeat'], help='Loops the current playing song')
 async def loop(ctx):
@@ -242,7 +260,8 @@ async def loop(ctx):
             await ctx.send('Loop disabled')
     else:
         await ctx.send(embed=discord.Embed(description=bot_name+' is not playing.'))
-            
+
+
 @bot.command(name='pause', help='Pauses currently playing song')
 async def pause(ctx):
     voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
@@ -264,6 +283,7 @@ async def resume(ctx):
     else:
         await ctx.send(embed=discord.Embed(description=bot_name+' is not paused'))
 
+
 @bot.command(name='stop', help='Stops the song')
 async def stop(ctx):
     global queue
@@ -276,6 +296,7 @@ async def stop(ctx):
     bot_activity = 'nothing'
     await ctx.message.add_reaction('⏹')
     await ctx.send(embed=discord.Embed(description=bot_name+' is stopped'))
+
 
 @bot.command(name='leave', aliases=['dc', 'disconnect'], help='Disconnects from the voice channel')
 async def leave(ctx):
@@ -293,21 +314,24 @@ async def leave(ctx):
     else:
         await ctx.send(embed=discord.Embed(description=bot_name+' is not connected to voice channels'))
 
+
 @bot.command(name='ping', help='Latency for the bot')
 async def ping(ctx):
     await ctx.send(f'Pong! In {round(bot.latency * 1000)}ms')
+
 
 @bot.command(name='type', help='**Sends the typed message in selected channel')
 async def type(ctx, channel_name: str, *, msg: str):
     admin = ctx.message.author.guild_permissions.administrator
     if admin:
         get_channel = discord.utils.get(
-        ctx.guild.channels, guild=ctx.guild, name=channel_name)
+            ctx.guild.channels, guild=ctx.guild, name=channel_name)
         channel_id = get_channel.id
         channel = bot.get_channel(channel_id)
         await channel.send(msg)
     else:
         await ctx.send('You dont have permission to use this command.')
+
 
 @bot.command(name='user', help='Grabs the user details')
 async def user(ctx, member: discord.Member):
@@ -316,25 +340,29 @@ async def user(ctx, member: discord.Member):
     avatar = member.avatar_url
     joined_at = member.joined_at.strftime("%b %d, %Y")
     created_at = member.created_at.strftime("%b %d, %Y")
-    embed=discord.Embed(type='rich', title=name, thumbnail=avatar, description=f'User Details', color=discord.Color.blurple())
+    embed = discord.Embed(type='rich', title=name, thumbnail=avatar,
+                          description=f'User Details', color=discord.Color.blurple())
     embed.add_field(name=f'ID', value=id, inline=True)
     embed.add_field(name=f'Discord Created', value=created_at, inline=False)
     embed.add_field(name=f'Server Joined', value=joined_at, inline=False)
     embed.set_thumbnail(url=avatar)
     await ctx.send(embed=embed)
 
+
 @bot.command(name='invite', help='Gives the invite link of the discord server')
 async def invite(ctx):
-    invite_link = await ctx.channel.create_invite(max_age = 300)
+    invite_link = await ctx.channel.create_invite(max_age=300)
     await ctx.message.author.send('Here is the invite link. \n' + str(invite_link))
 
+
 @bot.command(name='clear', help='Clears message')
-async def clear(ctx, amount = 1):
+async def clear(ctx, amount=1):
     admin = ctx.message.author.guild_permissions.administrator
     if admin:
         await ctx.channel.purge(limit=amount)
     else:
         await ctx.send('You dont have permission to use this command.')
+
 
 @bot.command(name='volume', aliases=['vol'], help='**Changes volume of bot')
 async def vol(ctx, vol: float):
@@ -346,12 +374,14 @@ async def vol(ctx, vol: float):
     else:
         await ctx.send('You dont have permission to use this command.')
 
+
 @bot.command(name='memcount', help='Counts members and bots')
 async def count(ctx):
     total_member = ctx.guild.member_count
 
-    embed=discord.Embed(title='Member Count')
-    embed.add_field(name='Total Members with bots', value=f'**{total_member}**', inline=True)
+    embed = discord.Embed(title='Member Count')
+    embed.add_field(name='Total Members with bots',
+                    value=f'**{total_member}**', inline=True)
     await ctx.send(embed=embed)
 
 bot.run(TOKEN)
