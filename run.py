@@ -198,7 +198,7 @@ async def queue_display(ctx):
             queue_list = f'```\n{i}. {title}\n```'
             await ctx.send(queue_list)
 
-@bot.command(name='skip', aliases=['next'] help='Skips currently playing song')
+@bot.command(name='skip', aliases=['next'], help='Skips currently playing song')
 async def skip(ctx):
     global music_title
     global music_url
