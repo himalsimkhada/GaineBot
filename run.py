@@ -401,12 +401,17 @@ async def count(ctx):
     await ctx.send(embed=embed)
 
 @bot.command(name='lyrics', help="Displays lyrics of currently playing song")
-async def lyrics(ctx):
+async def lyrics(ctx, *, song: str):
     global genius
     global music_title
 
-    song = genius.search_song(music_title)
-    lyrics = song.lyrics
-    await ctx.send(lyrics)
+    try:
+        song = genius.search_song(song)
+        lyrics = song.lyrics
+        await ctx.send(lyrics)
+
+        await ctx.send(embed=discord.Embed(description=lyrics))
+    except AttributeError:
+        await ctx.send('Didnt found lyrics for that keyword')
 
 bot.run(TOKEN)
