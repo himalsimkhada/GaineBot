@@ -151,6 +151,7 @@ async def play(ctx, *, url: str):
                     await ctx.send('Playing ' + music_title)
                     embed = discord.Embed(
                         title='Now Playing', url=music_url, description=music_title)
+                    embed.add_field(name=music_title, value=music_url, inline=False)
                     embed.set_footer(text=f'Requested by {ctx.message.author}')
                     embed.set_thumbnail(url=music_thumbnail)
                     await ctx.send(embed=embed)
@@ -167,6 +168,7 @@ async def play(ctx, *, url: str):
                 await ctx.send('Playing ' + music_title)
                 embed = discord.Embed(
                     title='Now Playing', url=music_url, description=music_title)
+                embed.add_field(name=music_title, value=music_url, inline=False)
                 embed.set_footer(text=f'Requested by {ctx.message.author}')
                 embed.set_thumbnail(url=music_thumbnail)
                 await ctx.send(embed=embed)
@@ -200,6 +202,7 @@ async def now(ctx):
             await ctx.send('Playing ' + music_title)
             embed = discord.Embed(
                 title='Now Playing', url=music_url, description=music_title)
+            embed.add_field(name=music_title, value=music_url, inline=False)
             embed.set_footer(text=f'Requested by {ctx.message.author}')
             embed.set_thumbnail(url=music_thumbnail)
             await ctx.send(embed=embed)
@@ -241,6 +244,7 @@ async def skip(ctx):
                 await ctx.send('Playing ' + music_title)
                 embed = discord.Embed(
                     title='Now Playing', url=music_url, description=music_title)
+                embed.add_field(name=music_title, value=music_url, inline=False)
                 embed.set_footer(text=f'Requested by {ctx.message.author}')
                 embed.set_thumbnail(url=music_thumbnail)
                 await ctx.send(embed=embed)
@@ -252,6 +256,7 @@ async def skip(ctx):
                 await ctx.send('Playing ' + music_title)
                 embed = discord.Embed(
                     title='Now Playing', url=music_url, description=music_title)
+                embed.add_field(name=music_title, value=music_url, inline=False)
                 embed.set_footer(text=f'Requested by {ctx.message.author}')
                 embed.set_thumbnail(url=music_thumbnail)
                 await ctx.send(embed=embed)
