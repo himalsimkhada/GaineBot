@@ -65,7 +65,7 @@ async def on_voice_state_update(member, before, after):
             else:
                 await voice.disconnect()  # if not it disconnects
                 channel = bot.get_channel(505615259638300687)
-                await channel.send(embed=discord.Embed(description='Disconneted due to inactivity. *(If bot is inactive for 5 minutes it will automatically disconnects. Use* **!join** *to reconnect bot.)*'))
+                await channel.send(embed=discord.Embed(description='Disconnected due to inactivity. *(If bot is inactive for 5 minutes it will automatically disconnects. Use* **!join** *to reconnect bot.)*'))
     except AttributeError:
         print(f'Disconnected due to inactivity')
         
@@ -400,7 +400,7 @@ async def count(ctx):
                     value=f'**{total_member}**', inline=True)
     await ctx.send(embed=embed)
 
-@bot.command(name='lyrics', help="Displays lyrics of currently playing song")
+@bot.command(name='lyrics', help="Displays lyrics of the searched song (using LyricsGenius API)")
 async def lyrics(ctx, *, song: str):
     global genius
     global music_title
@@ -408,8 +408,6 @@ async def lyrics(ctx, *, song: str):
     try:
         song = genius.search_song(song)
         lyrics = song.lyrics
-        await ctx.send(lyrics)
-
         await ctx.send(embed=discord.Embed(description=lyrics))
     except AttributeError:
         await ctx.send('Didnt found lyrics for that keyword')
