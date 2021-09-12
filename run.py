@@ -29,6 +29,7 @@ music_thumbnail = ''
 queue = []
 bot_activity = 'NOTHING'
 repeat = 'none'
+searched_keyword = ''
 
 # initializing lyrics
 genius = lyricsgenius.Genius(GENIUS_TOKEN)
@@ -119,6 +120,7 @@ async def summon(ctx):
 
 @bot.command(name='play', aliases=['p'], help='Plays song from youtube')
 async def play(ctx, *, url: str):
+    global searched_keyword
     channel = ctx.message.author.voice.channel
     voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
 
@@ -161,6 +163,7 @@ async def play(ctx, *, url: str):
                 except DownloadError:
                     await ctx.send(embed=discord.Embed(description='Invalid link'))
             else:
+                searched_keyword = url
                 queue.append(top_result)
                 music_url = top_result
                 await ctx.send('Searching for '+ url)
@@ -400,18 +403,24 @@ async def count(ctx):
                     value=f'**{total_member}**', inline=True)
     await ctx.send(embed=embed)
 
-@bot.command(name='lyrics', help="Displays lyrics of the searched song (using LyricsGenius API)")
-async def lyrics(ctx, *, song: str):
+@bot.command(name='lyrics', help="Displays lyrics of playing song (using LyricsGenius API)")
+async def lyrics(ctx):
     global genius
     global music_title
+    global searched_keyword
 
     try:
-        song = genius.search_song(song)
-        song.lyrics
-        embed = discord.Embed(title=song.full_title, url=song.url, description=song.lyrics)
-        embed.set_footer(text=f'Requested by {ctx.message.author}')
-        embed.set_thumbnail(url=song.song_art_image_thumbnail_url)
-        await ctx.send(embed=embed)
+        if searched_keyword:
+            song = genius.search_song(searched_keyword)
+            if song:
+                embed = discord.Embed(title=song.full_title, url=song.url, description=song.lyrics)
+                embed.set_footer(text=f'Requested by {ctx.message.author}')
+                embed.set_thumbnail(url=song.song_art_image_thumbnail_url)
+                await ctx.send(embed=embed)
+            else:
+                await ctx.send('Cannot find lyrics with the name ' + searched_keyword)
+        else:
+            await ctx.send('Please play music using keywords (music played through URL is not supported)')
     except AttributeError:
         await ctx.send('Didnt found lyrics for that keyword')
 
