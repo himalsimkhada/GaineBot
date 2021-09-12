@@ -408,7 +408,7 @@ async def lyrics(ctx, *, song: str):
     try:
         song = genius.search_song(song)
         song.lyrics
-        embed = discord.Embed(title=song.full_title, url=song.url description=song.lyrics)
+        embed = discord.Embed(title=song.full_title, url=song.url, description=song.lyrics)
         embed.set_footer(text=f'Requested by {ctx.message.author}')
         embed.set_thumbnail(url=song.song_art_image_thumbnail_url)
         await ctx.send(embed=embed)
