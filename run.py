@@ -11,10 +11,12 @@ from youtube_dl import YoutubeDL
 from youtube_dl.utils import DownloadError, ExtractorError
 import validators
 import asyncio
+import lyricsgenius
 
 load_dotenv()
 # TOKEN = os.getenv('DISCORD_TOKEN')
 TOKEN = os.environ['DISCORD_TOKEN']
+GENIUS_TOKEN = os.environ['GENIUS_LYRICS_TOKEN']
 
 bot_name = 'Gaine'
 
@@ -27,6 +29,9 @@ music_thumbnail = ''
 queue = []
 bot_activity = 'NOTHING'
 repeat = 'none'
+
+# initializing lyrics
+genius = lyricsgenius.Genius(GENIUS_TOKEN)
 
 YDL_OPTIONS = {'format': 'bestaudio/best', 'noplaylist': 'True'}
 FFMPEG_OPTIONS = {
@@ -394,5 +399,14 @@ async def count(ctx):
     embed.add_field(name='Total Members with bots',
                     value=f'**{total_member}**', inline=True)
     await ctx.send(embed=embed)
+
+@bot.command(name='lyrics', help="Displays lyrics of currently playing song")
+async def lyrics(ctx):
+    global genius
+    global music_title
+
+    song = genius.search_song(music_title)
+    lyrics = song.lyrics
+    await ctx.send(lyrics)
 
 bot.run(TOKEN)
