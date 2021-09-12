@@ -60,7 +60,7 @@ async def on_voice_state_update(member, before, after):
             else:
                 await voice.disconnect()  # if not it disconnects
                 channel = bot.get_channel(505615259638300687)
-                await channel.send(embed=discord.Embed(description='Disconneted due to inactivity. *(If bot is inactive for 5 minutes it will automatically disconnects. Use **!join** to reconnect bot.)*'))
+                await channel.send(embed=discord.Embed(description='Disconneted due to inactivity. *(If bot is inactive for 5 minutes it will automatically disconnects. Use* **!join** *to reconnect bot.)*'))
     except AttributeError:
         print(f'Disconnected due to inactivity')
         
@@ -116,16 +116,18 @@ async def summon(ctx):
 async def play(ctx, *, url: str):
     channel = ctx.message.author.voice.channel
     voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
+
     if not ctx.message.author.voice:
         await ctx.message.add_reaction('✖')
         await ctx.send(embed=discord.Embed(description='You are not connected to a voice channel.'))
+
+
+    if voice is None:
+        await channel.connect()
+        await ctx.guild.change_voice_state(channel=channel, self_mute=False, self_deaf=True)
+        voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     else:
-        if voice is None:
-            await channel.connect()
-            await ctx.guild.change_voice_state(channel=channel, self_mute=False, self_deaf=True)
-            voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-        else:
-            await ctx.send(embed=discord.Embed(description=bot_name+' is already connected somewhere'))
+        await ctx.send(embed=discord.Embed(description=bot_name+' is already connected somewhere'))
 
 
     y_link = 'https://www.youtube.com/results?search_query='
@@ -143,26 +145,28 @@ async def play(ctx, *, url: str):
                 try:
                     queue.append(url)
                     music_url = url
-                    await ctx.send(embed=discord.Embed(description=('Searching for '+url), title=bot_name))
+                    await ctx.send('Searching for '+url)
                     player(ctx, voice)
                     await ctx.message.add_reaction('▶')
+                    await ctx.send('Playing ' + music_title)
                     embed = discord.Embed(
-                        title=music_title, url=music_url, description='Now playing')
+                        title='Now Playing', url=music_url, description=music_title)
                     embed.set_footer(text=f'Requested by {ctx.message.author}')
                     embed.set_thumbnail(url=music_thumbnail)
                     await ctx.send(embed=embed)
                 except ExtractorError:
-                    await ctx.send('Invalid link')
+                    await ctx.send(embed=discord.Embed(description='Invalid link'))
                 except DownloadError:
-                    await ctx.send('Invalid link')
+                    await ctx.send(embed=discord.Embed(description='Invalid link'))
             else:
                 queue.append(top_result)
                 music_url = top_result
-                await ctx.send(embed=discord.Embed(description=('Searching for '+'['+url+']('+link+')'), title=bot_name))
+                await ctx.send('Searching for '+'['+url+']('+link+')')
                 player(ctx, voice)
                 await ctx.message.add_reaction('▶')
+                await ctx.send('Playing ' + music_title)
                 embed = discord.Embed(
-                    title=music_title, url=music_url, description='Now playing')
+                    title='Now Playing', url=music_url, description=music_title)
                 embed.set_footer(text=f'Requested by {ctx.message.author}')
                 embed.set_thumbnail(url=music_thumbnail)
                 await ctx.send(embed=embed)
@@ -170,19 +174,19 @@ async def play(ctx, *, url: str):
             if valid_url == True:
                 queue.append(url)
                 await ctx.message.add_reaction('🆗')
-                await ctx.send('Added to queue')
+                await ctx.send(embed=discord.Embed(description='Added to queue'))
             else:
                 queue.append(top_result)
                 await ctx.message.add_reaction('🆗')
-                await ctx.send('Added to queue')
+                await ctx.send(embed=discord.Embed(description='Added to queue'))
     except AttributeError:
-        await ctx.send('Joined a voice channel, please use the command again to play')
+        await ctx.send(embed=discord.Embed(description='Joined a voice channel, please use the command again to play'))
 
 
 @play.error
 async def play_error(ctx, error):
     if isinstance(error, discord.ext.commands.errors.MissingRequiredArgument):
-        await ctx.send("Please include URL after !play command to play song.")
+        await ctx.send(embed=discord.Embed(description='Please include URL after **!play** command to play song.'))
 
 
 @bot.command(name='nowplaying', aliases=['np', 'currently'], help='Displays currently playing song')
@@ -193,23 +197,23 @@ async def now(ctx):
     voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     if voice:
         if voice.is_playing():
+            await ctx.send('Playing ' + music_title)
             embed = discord.Embed(
-                title=music_title, url=music_url, description='Now playing')
+                title='Now Playing', url=music_url, description=music_title)
             embed.set_footer(text=f'Requested by {ctx.message.author}')
             embed.set_thumbnail(url=music_thumbnail)
-            embed.set_image(url=music_thumbnail)
             await ctx.send(embed=embed)
         else:
-            await ctx.send('Nothing is playing.')
+            await ctx.send(embed=discord.Embed(description='Nothing is playing.'))
     else:
-        await ctx.send(bot_name+' not connected to voice.')
+        await ctx.send(embed=discord.Embed(description=bot_name+' not connected to voice.'))
 
 
 @bot.command(name='queue', help='Displays the queue')
 async def queue_display(ctx):
     global queue_list
     if len(queue) == 0:
-        await ctx.send('No queue available')
+        await ctx.send(embed=discord.Embed(description='No queue available'))
     else:
         i = 0
         for x in queue:
@@ -218,7 +222,7 @@ async def queue_display(ctx):
             i = i + 1
             title = str(info.get('title'))
             queue_list = f'```\n{i}. {title}\n```'
-            await ctx.send(queue_list)
+            await ctx.send(embed=discord.Embed(description=queue_list))
 
 
 @bot.command(name='skip', aliases=['next'], help='Skips currently playing song')
@@ -230,22 +234,24 @@ async def skip(ctx):
     if voice.is_playing():
         try:
             if repeat == 'yes':
-                await ctx.send('Skipping')
+                await ctx.send('Skipping current song')
                 voice.pause()
                 del queue[0]
                 play_queue(ctx, voice)
+                await ctx.send('Playing ' + music_title)
                 embed = discord.Embed(
-                    title=music_title, url=music_url, description='Now playing')
+                    title='Now Playing', url=music_url, description=music_title)
                 embed.set_footer(text=f'Requested by {ctx.message.author}')
                 embed.set_thumbnail(url=music_thumbnail)
                 await ctx.send(embed=embed)
             elif repeat == 'none':
-                await ctx.send('Skipping')
+                await ctx.send('Skipping current song')
                 voice.pause()
                 # del queue[0]
                 play_queue(ctx, voice)
+                await ctx.send('Playing ' + music_title)
                 embed = discord.Embed(
-                    title=music_title, url=music_url, description='Now playing')
+                    title='Now Playing', url=music_url, description=music_title)
                 embed.set_footer(text=f'Requested by {ctx.message.author}')
                 embed.set_thumbnail(url=music_thumbnail)
                 await ctx.send(embed=embed)
@@ -315,7 +321,7 @@ async def leave(ctx):
     if voice and voice.is_connected():
         queue.clear()
         queue_list = ''
-        bot_activity = 'nothing'
+        bot_activity = 'NOTHING'
         await voice.disconnect()
         await ctx.message.add_reaction('🆗')
         await ctx.send(embed=discord.Embed(description=bot_name+' is disconnected'))
@@ -338,7 +344,7 @@ async def type(ctx, channel_name: str, *, msg: str):
         channel = bot.get_channel(channel_id)
         await channel.send(msg)
     else:
-        await ctx.send('You dont have permission to use this command.')
+        await ctx.send(embed=discord.Embed(description='You dont have permission to use this command.'))
 
 
 @bot.command(name='user', help='Grabs the user details')
@@ -369,7 +375,7 @@ async def clear(ctx, amount=1):
     if admin:
         await ctx.channel.purge(limit=amount)
     else:
-        await ctx.send('You dont have permission to use this command.')
+        await ctx.send(embed=discord.Embed(description='You dont have permission to use this command.'))
 
 
 @bot.command(name='volume', aliases=['vol'], help='**Changes volume of bot')
@@ -378,9 +384,9 @@ async def vol(ctx, vol: float):
     voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     if admin:
         voice.source = PCMVolumeTransformer(voice.source, volume=vol)
-        await ctx.send(f'Successfully changed volume to {vol}')
+        await ctx.send(embed=discord.Embed(description=f'Successfully changed volume to {vol}'))
     else:
-        await ctx.send('You dont have permission to use this command.')
+        await ctx.send(embed=discord.Embed(description='You dont have permission to use this command.'))
 
 
 @bot.command(name='memcount', help='Counts members and bots')
