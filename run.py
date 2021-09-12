@@ -60,7 +60,7 @@ async def on_voice_state_update(member, before, after):
             else:
                 await voice.disconnect()  # if not it disconnects
                 channel = bot.get_channel(505615259638300687)
-                await channel.send(f'Disconnected due to inactivity **(Inactive Time = 5 minutes)**')
+                await channel.send(embed=discord.Embed(description='Disconneted due to inactivity. *(If bot is inactive for 5 minutes it will automatically disconnects. Use **!join** to reconnect bot.)*'))
     except AttributeError:
         print(f'Disconnected due to inactivity')
         
@@ -101,7 +101,7 @@ async def summon(ctx):
     voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     if not ctx.message.author.voice:
         await ctx.message.add_reaction('✖')
-        await ctx.send('You are not connected to a voice channel.')
+        await ctx.send(embed=discord.Embed(description='You are not connected to a voice channel.'))
     else:
         if voice is None:
             channel = ctx.message.author.voice.channel
@@ -116,10 +116,17 @@ async def summon(ctx):
 async def play(ctx, *, url: str):
     channel = ctx.message.author.voice.channel
     voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-    if voice is None:
-        await channel.connect()
-        await ctx.guild.change_voice_state(channel=channel, self_mute=False, self_deaf=True)
-        voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
+    if not ctx.message.author.voice:
+        await ctx.message.add_reaction('✖')
+        await ctx.send(embed=discord.Embed(description='You are not connected to a voice channel.'))
+    else:
+        if voice is None:
+            await channel.connect()
+            await ctx.guild.change_voice_state(channel=channel, self_mute=False, self_deaf=True)
+            voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
+        else:
+            await ctx.send(embed=discord.Embed(description=bot_name+' is already connected somewhere'))
+
 
     y_link = 'https://www.youtube.com/results?search_query='
     query_string = urllib.parse.urlencode({'search_query': url})
@@ -255,10 +262,10 @@ async def loop(ctx):
     if voice.is_playing():
         if repeat == 'none':
             repeat = 'yes'
-            await ctx.send('Loop enabled')
+            await ctx.send(embed=discord.Embed(description=music_title+' is now in loop.'))
         elif repeat == 'yes':
             repeat = 'none'
-            await ctx.send('Loop disabled')
+            await ctx.send(embed=discord.Embed(description='Loop disabled'))
     else:
         await ctx.send(embed=discord.Embed(description=bot_name+' is not playing.'))
 
@@ -318,7 +325,7 @@ async def leave(ctx):
 
 @bot.command(name='ping', help='Latency for the bot')
 async def ping(ctx):
-    await ctx.send(f'Pong! In {round(bot.latency * 1000)}ms')
+    await ctx.send(embed=discord.Embed(description=f'Pong! In {round(bot.latency * 1000)}ms'))
 
 
 @bot.command(name='type', help='**Sends the typed message in selected channel')
