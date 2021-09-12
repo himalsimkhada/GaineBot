@@ -126,9 +126,6 @@ async def play(ctx, *, url: str):
         await channel.connect()
         await ctx.guild.change_voice_state(channel=channel, self_mute=False, self_deaf=True)
         voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-    else:
-        await ctx.send(embed=discord.Embed(description=bot_name+' is already connected somewhere'))
-
 
     y_link = 'https://www.youtube.com/results?search_query='
     query_string = urllib.parse.urlencode({'search_query': url})
@@ -174,11 +171,11 @@ async def play(ctx, *, url: str):
             if valid_url == True:
                 queue.append(url)
                 await ctx.message.add_reaction('🆗')
-                await ctx.send(embed=discord.Embed(description='Added to queue'))
+                await ctx.send(embed=discord.Embed(description=url+' added to queue'))
             else:
                 queue.append(top_result)
                 await ctx.message.add_reaction('🆗')
-                await ctx.send(embed=discord.Embed(description='Added to queue'))
+                await ctx.send(embed=discord.Embed(description=top_result+' added to queue'))
     except AttributeError:
         await ctx.send(embed=discord.Embed(description='Joined a voice channel, please use the command again to play'))
 
