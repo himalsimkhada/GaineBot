@@ -85,7 +85,7 @@ def player(ctx, voice):
     music_title = info.get('title', None)
     music_thumbnail = info.get('thumbnail')
     voice.play(FFmpegPCMAudio(
-        URL, executable="C:/Users/himal/Downloads/Compressed/ffmpeg-2021-09-11-git-3e127b595a-full_build/bin/ffmpeg.exe", **FFMPEG_OPTIONS), after=lambda e: play_queue(ctx, voice))
+        URL, executable="ffmpeg", **FFMPEG_OPTIONS), after=lambda e: play_queue(ctx, voice))
     voice.is_playing()
 
 
