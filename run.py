@@ -1,5 +1,4 @@
 import os
-
 from dotenv import load_dotenv
 import discord
 from discord.ext import commands, tasks
@@ -14,8 +13,9 @@ import asyncio
 import lyricsgenius
 
 load_dotenv()
-# TOKEN = os.getenv('DISCORD_TOKEN')
-TOKEN = os.environ['DISCORD_TOKEN']
+# DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
+# GENIUS_TOKEN = os.getenv('GENIUS_LYRICS_TOKEN')
+DISCORD_TOKEN = os.environ['DISCORD_TOKEN']
 GENIUS_TOKEN = os.environ['GENIUS_LYRICS_TOKEN']
 
 bot_name = 'Gaine'
@@ -29,7 +29,6 @@ music_thumbnail = ''
 queue = []
 bot_activity = 'NOTHING'
 repeat = 'none'
-searched_keyword = ''
 
 # initializing lyrics
 genius = lyricsgenius.Genius(GENIUS_TOKEN)
@@ -60,16 +59,16 @@ async def on_voice_state_update(member, before, after):
         while voice.is_playing():  # Checks if voice is playing
             await asyncio.sleep(1)  # While it's playing it sleeps for 1 second
         else:
-            await asyncio.sleep(300)  # If it's not playing it waits 300 seconds / 5 minutes
+            # If it's not playing it waits 300 seconds / 5 minutes
+            await asyncio.sleep(300)
             while voice.is_playing():  # and checks once again if the bot is not playing
                 break  # if it's playing it breaks
             else:
                 await voice.disconnect()  # if not it disconnects
-                channel = bot.get_channel(505615259638300687)
-                await channel.send(embed=discord.Embed(description='Disconnected due to inactivity. *(If bot is inactive for 5 minutes it will automatically disconnects. Use* **!join** *to reconnect bot.)*'))
+                # channel = bot.get_channel(505615259638300687)
+                # await channel.send(embed=discord.Embed(description='Disconnected due to inactivity. *(If bot is inactive for 5 minutes it will automatically disconnects. Use* **!join** *to reconnect bot.)*'))
     except AttributeError:
         print(f'Disconnected due to inactivity')
-        
 
 
 def player(ctx, voice):
@@ -86,7 +85,7 @@ def player(ctx, voice):
     music_title = info.get('title', None)
     music_thumbnail = info.get('thumbnail')
     voice.play(FFmpegPCMAudio(
-        URL, executable="ffmpeg", **FFMPEG_OPTIONS), after=lambda e: play_queue(ctx, voice))
+        URL, executable="C:/Users/himal/Downloads/Compressed/ffmpeg-2021-09-11-git-3e127b595a-full_build/bin/ffmpeg.exe", **FFMPEG_OPTIONS), after=lambda e: play_queue(ctx, voice))
     voice.is_playing()
 
 
@@ -120,14 +119,12 @@ async def summon(ctx):
 
 @bot.command(name='play', aliases=['p'], help='Plays song from youtube')
 async def play(ctx, *, url: str):
-    global searched_keyword
     channel = ctx.message.author.voice.channel
     voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
 
     if not ctx.message.author.voice:
         await ctx.message.add_reaction('✖')
         await ctx.send(embed=discord.Embed(description='You are not connected to a voice channel.'))
-
 
     if voice is None:
         await channel.connect()
@@ -137,7 +134,6 @@ async def play(ctx, *, url: str):
     y_link = 'https://www.youtube.com/results?search_query='
     query_string = urllib.parse.urlencode({'search_query': url})
     htm_content = urllib.request.urlopen(y_link + query_string)
-    link = y_link + url.replace(' ', '+')
     search_results = re.findall(
         r"watch\?v=(\S{11})", htm_content.read().decode())
     top_result = 'http://www.youtube.com/watch?v=' + search_results[0]
@@ -148,30 +144,27 @@ async def play(ctx, *, url: str):
             if valid_url == True:
                 try:
                     queue.append(url)
-                    music_url = url
-                    await ctx.send('Searching for '+url)
+                    await ctx.send(embed=discord.Embed(description='Searching youtube for [URL](' + url + ')'))
                     player(ctx, voice)
                     await ctx.message.add_reaction('▶')
                     await ctx.send('Playing ' + music_title)
                     embed = discord.Embed(
-                        title='Now Playing', url=music_url, description='[' + music_title+ '](' + music_url + ')')
+                        title='Now Playing', url=music_url, description='[' + music_title + '](' + music_url + ')')
                     embed.set_footer(text=f'Requested by {ctx.message.author}')
                     embed.set_thumbnail(url=music_thumbnail)
                     await ctx.send(embed=embed)
                 except ExtractorError:
-                    await ctx.send(embed=discord.Embed(description='Invalid link'))
+                    await ctx.send(embed=discord.Embed(description='Invalid URL'))
                 except DownloadError:
-                    await ctx.send(embed=discord.Embed(description='Invalid link'))
+                    await ctx.send(embed=discord.Embed(description='Invalid URL'))
             else:
-                searched_keyword = url
                 queue.append(top_result)
-                music_url = top_result
-                await ctx.send('Searching for '+ url)
+                await ctx.send(embed=discord.Embed(description='Searching youtube for [' + url + '](' + top_result + ')'))
                 player(ctx, voice)
                 await ctx.message.add_reaction('▶')
                 await ctx.send('Playing ' + music_title)
                 embed = discord.Embed(
-                    title='Now Playing', url=music_url, description='[' + music_title+ '](' + music_url + ')')
+                    title='Now Playing', url=music_url, description='[' + music_title + '](' + music_url + ')')
                 embed.set_footer(text=f'Requested by {ctx.message.author}')
                 embed.set_thumbnail(url=music_thumbnail)
                 await ctx.send(embed=embed)
@@ -179,11 +172,11 @@ async def play(ctx, *, url: str):
             if valid_url == True:
                 queue.append(url)
                 await ctx.message.add_reaction('🆗')
-                await ctx.send(embed=discord.Embed(description=url+' added to queue'))
+                await ctx.send(embed=discord.Embed(description='[URL](' + url + ') added to queue'))
             else:
                 queue.append(top_result)
                 await ctx.message.add_reaction('🆗')
-                await ctx.send(embed=discord.Embed(description=top_result+' added to queue'))
+                await ctx.send(embed=discord.Embed(description='[' + url + '](' + top_result + ') added to queue'))
     except AttributeError:
         await ctx.send(embed=discord.Embed(description='Joined a voice channel, please use the command again to play'))
 
@@ -194,7 +187,7 @@ async def play_error(ctx, error):
         await ctx.send(embed=discord.Embed(description='Please include URL after **!play** command to play song.'))
 
 
-@bot.command(name='nowplaying', aliases=['np', 'currently'], help='Displays currently playing song')
+@bot.command(name='nowplaying', aliases=['np', 'now'], help='Displays currently playing song')
 async def now(ctx):
     global music_title
     global music_url
@@ -202,9 +195,9 @@ async def now(ctx):
     voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     if voice:
         if voice.is_playing():
-            await ctx.send('Playing ' + music_title)
+            await ctx.send('Now playing: ' + music_title)
             embed = discord.Embed(
-                title='Now Playing', url=music_url, description='[' + music_title+ '](' + music_url + ')')
+                title='Now Playing', url=music_url, description='[' + music_title + '](' + music_url + ')')
             embed.set_footer(text=f'Requested by {ctx.message.author}')
             embed.set_thumbnail(url=music_thumbnail)
             await ctx.send(embed=embed)
@@ -214,49 +207,59 @@ async def now(ctx):
         await ctx.send(embed=discord.Embed(description=bot_name+' not connected to voice.'))
 
 
-@bot.command(name='queue', help='Displays the queue')
+@bot.command(name='queue', aliases=['q', 'list'], help='Displays the queue')
 async def queue_display(ctx):
     global queue_list
     if len(queue) == 0:
         await ctx.send(embed=discord.Embed(description='No queue available'))
     else:
         i = 0
+        queue_list = ''
+        msg = '```Queue Lists \n'
+
         for x in queue:
             with YoutubeDL(YDL_OPTIONS) as ydl:
                 info = ydl.extract_info(x, download=False)
             i = i + 1
             title = str(info.get('title'))
-            queue_list = f'```\n{i}. {title}\n```'
-            await ctx.send(embed=discord.Embed(description=queue_list))
+            queue_list += f' \n{i}. {title}\n'
+        await ctx.send(msg + queue_list + '```')
 
 
-@bot.command(name='skip', aliases=['next'], help='Skips currently playing song')
+@bot.command(name='skip', aliases=['next', 's'], help='Skips currently playing song')
 async def skip(ctx):
     global music_title
     global music_url
     global music_thumbnail
     voice = discord.utils.get(bot.voice_clients, guild=ctx.guild)
+
+    if not ctx.message.author.voice:
+        await ctx.message.add_reaction('✖')
+        await ctx.send(embed=discord.Embed(description='You are not in a voice channel, you need to be in *voice* channel to use this command.'))
+
+    if not voice:
+        await ctx.message.add_reaction('✖')
+        await ctx.send(embed=discord.Embed(description='Bot is not connected to a voice channel. *Use **!join** to summon voice into the voice channel.*'))
+
     if voice.is_playing():
         try:
             if repeat == 'yes':
                 await ctx.send('Skipping current song')
                 voice.pause()
-                del queue[0]
                 play_queue(ctx, voice)
-                await ctx.send('Playing ' + music_title)
+                await ctx.send('Now playing ' + music_title)
                 embed = discord.Embed(
-                    title='Now Playing', url=music_url, description='[' + music_title+ '](' + music_url + ')')
+                    title='Now Playing', url=music_url, description='[' + music_title + '](' + music_url + ')')
                 embed.set_footer(text=f'Requested by {ctx.message.author}')
                 embed.set_thumbnail(url=music_thumbnail)
                 await ctx.send(embed=embed)
             elif repeat == 'none':
                 await ctx.send('Skipping current song')
                 voice.pause()
-                # del queue[0]
                 play_queue(ctx, voice)
-                await ctx.send('Playing ' + music_title)
+                await ctx.send('Now playing ' + music_title)
                 embed = discord.Embed(
-                    title='Now Playing', url=music_url, description='[' + music_title+ '](' + music_url + ')')
+                    title='Now Playing', url=music_url, description='[' + music_title + '](' + music_url + ')')
                 embed.set_footer(text=f'Requested by {ctx.message.author}')
                 embed.set_thumbnail(url=music_thumbnail)
                 await ctx.send(embed=embed)
@@ -265,6 +268,18 @@ async def skip(ctx):
     else:
         await ctx.send('No music playing')
 
+@bot.command(name='remove', aliases=['r'], help='Removes songs from playlist')
+async def remove(ctx, num: int):
+    if num == 0:
+        await ctx.send('Please enter higher than 0 and less than total queue.')
+    await ctx.send(embed=discord.Embed(description=queue[num -1] + 'is being deleted.'))
+    del queue[num - 1]
+    await ctx.message.add_reaction('✔️')
+
+@remove.error
+async def remove_queue_error(ctx, error):
+    if isinstance(error, discord.ext.commands.errors.CommandInvokeError):
+        await ctx.send(embed=discord.Embed(description='Queue not found'))
 
 @bot.command(name='loop', aliases=['repeat'], help='Loops the current playing song')
 async def loop(ctx):
@@ -273,7 +288,7 @@ async def loop(ctx):
     if voice.is_playing():
         if repeat == 'none':
             repeat = 'yes'
-            await ctx.send(embed=discord.Embed(description=music_title+' is now in loop.'))
+            await ctx.send(embed=discord.Embed(description=music_title+' is now playing loop. *Please type* **!loop** *to stop loop.*'))
         elif repeat == 'yes':
             repeat = 'none'
             await ctx.send(embed=discord.Embed(description='Loop disabled'))
@@ -287,9 +302,9 @@ async def pause(ctx):
     if voice.is_playing():
         voice.pause()
         await ctx.message.add_reaction('⏸')
-        await ctx.send(embed=discord.Embed(description=bot_name+' is paused'))
+        await ctx.send(embed=discord.Embed(description=music_title+' is paused'))
     else:
-        await ctx.send(embed=discord.Embed(description=bot_name+' is not playing.'))
+        await ctx.send(embed=discord.Embed(description='Noting is playing.'))
 
 
 @bot.command(name='resume', help='Resumes the paused song')
@@ -298,7 +313,7 @@ async def resume(ctx):
     if voice.is_paused():
         voice.resume()
         await ctx.message.add_reaction('▶')
-        await ctx.send(embed=discord.Embed(description=bot_name+' is resumed'))
+        await ctx.send(embed=discord.Embed(description=music_title+' is resumed'))
     else:
         await ctx.send(embed=discord.Embed(description=bot_name+' is not paused'))
 
@@ -339,7 +354,7 @@ async def ping(ctx):
     await ctx.send(embed=discord.Embed(description=f'Pong! In {round(bot.latency * 1000)}ms'))
 
 
-@bot.command(name='type', help='**Sends the typed message in selected channel')
+@bot.command(name='send', help='**Sends the typed message in selected channel')
 async def type(ctx, channel_name: str, *, msg: str):
     admin = ctx.message.author.guild_permissions.administrator
     if admin:
@@ -365,6 +380,7 @@ async def user(ctx, member: discord.Member):
     embed.add_field(name=f'Discord Created', value=created_at, inline=False)
     embed.add_field(name=f'Server Joined', value=joined_at, inline=False)
     embed.set_thumbnail(url=avatar)
+    embed.set_footer(text=f'Requested by {ctx.message.author}')
     await ctx.send(embed=embed)
 
 
@@ -403,25 +419,26 @@ async def count(ctx):
                     value=f'**{total_member}**', inline=True)
     await ctx.send(embed=embed)
 
+
 @bot.command(name='lyrics', help="Displays lyrics of playing song (using LyricsGenius API)")
-async def lyrics(ctx):
+async def lyrics(ctx, *, song_search: str):
     global genius
     global music_title
-    global searched_keyword
 
-    try:
-        if searched_keyword:
-            song = genius.search_song(searched_keyword)
-            if song:
-                embed = discord.Embed(title=song.full_title, url=song.url, description=song.lyrics)
-                embed.set_footer(text=f'Requested by {ctx.message.author}')
-                embed.set_thumbnail(url=song.song_art_image_thumbnail_url)
-                await ctx.send(embed=embed)
-            else:
-                await ctx.send('Cannot find lyrics with the name ' + searched_keyword)
-        else:
-            await ctx.send('Please play music using keywords (music played through URL is not supported)')
-    except AttributeError:
-        await ctx.send('Didnt found lyrics for that keyword')
+    song = genius.search_song(song_search)
+    if song:
+        embed = discord.Embed(
+            title=song.full_title, url=song.url, description=song.lyrics)
+        embed.set_footer(text=f'Requested by {ctx.message.author}')
+        embed.set_thumbnail(url=song.song_art_image_thumbnail_url)
+        await ctx.send(embed=embed)
+    else:
+        await ctx.send('Cannot find lyrics with the name ***' + song_search + '***.')
 
-bot.run(TOKEN)
+
+@lyrics.error
+async def play_error(ctx, error):
+    if isinstance(error, discord.ext.commands.errors.MissingRequiredArgument):
+        await ctx.send(embed=discord.Embed(description='Please include song name after **!lyrics** command to play song.'))
+
+bot.run(DISCORD_TOKEN)
