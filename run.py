@@ -227,7 +227,7 @@ async def queue_display(ctx):
             i = i + 1
             title = str(info.get('title'))
             queue_list += f' \n{i}. {title}\n'
-        await ctx.send(msg + queue_list + '```')
+        await ctx.send(msg + queue_list + f'Requested by {ctx.message.author}```')
 
 
 @bot.command(name='skip', aliases=['next', 's'], help='Skips currently playing song')
@@ -283,7 +283,7 @@ async def remove(ctx, num: int):
 @remove.error
 async def remove_queue_error(ctx, error):
     if isinstance(error, discord.ext.commands.errors.CommandInvokeError):
-        await ctx.send(embed=discord.Embed(description='Queue not found'))
+        await ctx.send(embed=discord.Embed(description='Provided queue not found'))
 
 @bot.command(name='loop', aliases=['repeat'], help='Loops the current playing song')
 async def loop(ctx):
