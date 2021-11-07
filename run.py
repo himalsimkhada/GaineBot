@@ -1,3 +1,5 @@
+# Developed By HIMAL SIMKHADA
+
 import os
 from dotenv import load_dotenv
 import discord
