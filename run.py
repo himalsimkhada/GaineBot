@@ -25,6 +25,7 @@ else:
     print(f'Heroku')
 
 bot_name = 'Gaine'
+# .
 
 bot = discord.Client()
 bot = commands.Bot(command_prefix="!", case_insensitive=True)
