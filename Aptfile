@@ -1,4 +1,3 @@
 ffmpeg
 libvpx7
-libpulsedsp
-libpulse-mainloop-glib0
+libpulse0
