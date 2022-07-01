@@ -1,7 +1,7 @@
-async-timeout==3.0.1
+#async-timeout==3.0.1
 discord.py==1.7.3
 python-dotenv==0.17.1
-urllib3==1.26.5
+#urllib3==1.26.5
 validators==0.18.2
 youtube-dl
 opuslib
