@@ -84,16 +84,19 @@ def player(ctx, voice):
     global music_url
     global bot_activity
 
-    with YoutubeDL(YDL_OPTIONS) as ydl:
-        info = ydl.extract_info(queue[0], download=False)
-    URL = info['formats'][0]['url']
-    bot_activity = info.get('title', None)
-    music_url = queue[0]
-    music_title = info.get('title', None)
-    music_thumbnail = info.get('thumbnail')
-    voice.play(FFmpegPCMAudio(
-        URL, executable="ffmpeg", **FFMPEG_OPTIONS), after=lambda e: play_queue(ctx, voice))
-    voice.is_playing()
+    try:
+        with YoutubeDL(YDL_OPTIONS) as ydl:
+            info = ydl.extract_info(queue[0], download=False)
+        URL = info['formats'][0]['url']
+        bot_activity = info.get('title', None)
+        music_url = queue[0]
+        music_title = info.get('title', None)
+        music_thumbnail = info.get('thumbnail')
+        voice.play(FFmpegPCMAudio(
+            URL, executable="ffmpeg", **FFMPEG_OPTIONS), after=lambda e: play_queue(ctx, voice))
+        voice.is_playing()
+    except Exception as e:
+        print(e)
 
 
 def play_queue(ctx, voice):
