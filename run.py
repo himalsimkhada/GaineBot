@@ -104,7 +104,8 @@ def play_queue(ctx, voice):
         elif len(queue) >= 1:
             del queue[0]
             player(ctx, voice)
-    except IndexError:
+    except IndexError as e:
+        print(e)
         print(f'Queue finish')
 
 
