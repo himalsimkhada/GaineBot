@@ -87,8 +87,7 @@ def player(ctx, voice):
         music_url = queue[0]
         music_title = info.get('title', None)
         music_thumbnail = info.get('thumbnail')
-        voice.play(FFmpegPCMAudio(
-            URL, executable="ffmpeg", **FFMPEG_OPTIONS), after=lambda e: play_queue(ctx, voice))
+        voice.play(FFmpegPCMAudio(URL, **FFMPEG_OPTIONS), after=lambda e: play_queue(ctx, voice))
         voice.is_playing()
     except Exception as e:
         print(e)
