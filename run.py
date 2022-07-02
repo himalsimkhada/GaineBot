@@ -15,14 +15,9 @@ import asyncio
 import lyricsgenius
 
 load_dotenv()
-if load_dotenv():
-    DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
-    GENIUS_TOKEN = os.getenv('GENIUS_LYRICS_TOKEN')
-    print(f'Local')
-else:
-    DISCORD_TOKEN = os.environ['DISCORD_TOKEN']
-    GENIUS_TOKEN = os.environ['GENIUS_LYRICS_TOKEN']
-    print(f'Heroku')
+DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
+GENIUS_TOKEN = os.getenv('GENIUS_LYRICS_TOKEN')
+print(f'Variables Loaded')
 
 bot_name = 'Gaine'
 # .
